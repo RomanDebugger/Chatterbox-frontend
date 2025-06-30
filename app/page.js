@@ -9,7 +9,7 @@ export default function Home() {
   useEffect(() => {
     const timer = setTimeout(() => {
       router.replace('/auth');
-    }, 1200);
+    }, 500);
     return () => clearTimeout(timer);
   }, [router]);
   return (

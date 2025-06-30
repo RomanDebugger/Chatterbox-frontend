@@ -2,14 +2,13 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { initializeSocket, destroySocket } from '@/app/lib/socket';
 import { useAuth } from './AuthContext';
-import { useNotification } from './NotificationContext';
 import { socketEvents } from '@/app/lib/socket';
-
+import { useNotificationStore } from '@/app/stores/notificationStore';
 const SocketContext = createContext();
 
 export const SocketProvider = ({ children }) => {
   const { user } = useAuth();
-  const { notify } = useNotification();
+  const notify = useNotificationStore(state => state.notify)
   const [socket, setSocket] = useState(null);
   const [connected, setConnected] = useState(false);
 

@@ -13,48 +13,35 @@ export function AuthProvider({ children }) {
   const pathname = usePathname();
 
   useEffect(() => {
-    const loadUser = async () => {
-      try {
-        const token = sessionStorage.getItem('token');
-        const savedUser = sessionStorage.getItem('user');
-
-        if (token && savedUser) {
-          setUser(JSON.parse(savedUser));
-        } else {
-          setUser(null);
-        }
-      } catch (err) {
-        console.error("Failed to load user:", err);
-        sessionStorage.removeItem('token');
-        sessionStorage.removeItem('user');
-        setUser(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadUser();
-  }, []);
-
-  useEffect(() => {
-    if (loading) return;
-
+  const loadUser = async () => {
     const token = sessionStorage.getItem('token');
-    const isAuthPage = pathname.startsWith('/auth');
-    const isProtectedPage = pathname.startsWith('/chat');
+    const savedUser = sessionStorage.getItem('user');
 
-    if (!token && isProtectedPage) {
-      router.replace('/auth');
+    if (!token || !savedUser) {
+      sessionStorage.removeItem('token');
+      sessionStorage.removeItem('user');
+      setUser(null);
+      setLoading(false);
+      if (pathname.startsWith('/chat')) router.replace('/auth');
       return;
     }
 
-    if (token && isAuthPage) {
-      router.replace('/chat');
-      return;
+    try {
+      setUser(JSON.parse(savedUser));
+      if (pathname.startsWith('/auth')) router.replace('/chat');
+    } catch (err) {
+      console.error("Failed to parse saved user:", err);
+      sessionStorage.removeItem('token');
+      sessionStorage.removeItem('user');
+      setUser(null);
+    } finally {
+      setLoading(false);
     }
-  }, [loading, pathname, router]);
+  };
 
-  console.log("AuthContext loaded with user:", user);
+  loadUser();
+}, [pathname, router]);
+
   
 
   const login = async (credentials) => {

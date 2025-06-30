@@ -5,16 +5,11 @@ import { useAuth } from '@/app/contexts/AuthContext';
 import NewRoomModal from '../components/newRoomModal';
 import FloatingBackground from '../components/FloatingBackground';
 import Logo from '../components/Logo';
-import LoadingSpinner from '../components/auth/LoadingSpinner';
 export default function MainLayout({ children }) {
-  const { user, loading, logout } = useAuth();
+  const {logout } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const [showNewRoom, setShowNewRoom] = useState(false);
-  
-  if (loading || !user) {
-    return <LoadingSpinner />;
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-red-900 to-slate-700">

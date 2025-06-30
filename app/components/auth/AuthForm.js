@@ -1,63 +1,45 @@
-'use client';
 export default function AuthForm({
-  activeForm, loginData, signupData, setLoginData, setSignupData,
-  handleSubmit, isLoading, primaryGradient, secondaryGradient
-}) {  
+  activeForm, form, setForm, handleSubmit, isLoading
+})
+
+ {  
+  const buttonClass = activeForm === 'login'
+    ? 'bg-gradient-to-r from-amber-400 to-rose-400'
+    : 'bg-gradient-to-r from-sky-400 to-indigo-400';
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <input
         name="username"
-        value={activeForm === 'login' ? loginData.username : signupData.username}
-        onChange={(e) => {
-          const value = e.target.value;
-          if (activeForm === 'login') {
-            setLoginData({ ...loginData, username: value });
-          } else {
-            setSignupData({ ...signupData, username: value });
-          }
-        }}
+        value={form.username}
+        onChange={(e) => setForm({...form, username: e.target.value})}
         className="w-full p-3 bg-slate-700/50 border border-slate-600/50 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-400/30"
         placeholder="Username"
-        required
       />
       <input
         name="password"
         type="password"
-        value={activeForm === 'login' ? loginData.password : signupData.password}
-        onChange={(e) => {
-          const value = e.target.value;
-          if (activeForm === 'login') {
-            setLoginData({ ...loginData, password: value });
-          } else {
-            setSignupData({ ...signupData, password: value });
-          }
-        }}
+        value={form.password}
+        onChange={(e) => setForm({...form, password: e.target.value})}
         className="w-full p-3 bg-slate-700/50 border border-slate-600/50 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-400/30"
         placeholder="Password"
-        required
       />
       {activeForm === 'signup' && (
         <input
           name="confirm password"
           type="password"
-          value={signupData.confirmPassword}
-          onChange={(e) => setSignupData({ ...signupData, confirmPassword: e.target.value })}
+          value={form.confirmPassword}
+          onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
           className="w-full p-3 bg-slate-700/50 border border-slate-600/50 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-400/30"
           placeholder="Confirm password"
-          required
         />
       )}
-      {activeForm === 'signup' && signupData.password && signupData.confirmPassword && signupData.password !== signupData.confirmPassword && (
+      {activeForm === 'signup' && form.password && form.confirmPassword && form.password !== form.confirmPassword && (
         <p className="text-sm text-rose-400">Password do not match</p>
       )}
       <button
         type="submit"
         disabled={isLoading}
-        className={`w-full py-3 font-medium rounded-lg text-white ${
-          activeForm === 'login' 
-          ? `bg-gradient-to-r ${primaryGradient}` 
-          : `bg-gradient-to-r ${secondaryGradient}`
-        } hover:shadow-md transition-all flex items-center justify-center`}
+        className={`w-full py-3 font-medium rounded-lg text-white ${buttonClass} hover:shadow-md transition-all flex items-center justify-center`}
       >
         {isLoading ? (
           <>

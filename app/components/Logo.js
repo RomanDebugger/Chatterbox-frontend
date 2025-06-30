@@ -1,4 +1,3 @@
-'use client';
 export default function Logo() {
   return (
     <div className="mx-auto w-24 h-24 mb-4">

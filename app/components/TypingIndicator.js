@@ -1,4 +1,3 @@
-// src/components/TypingIndicator.js
 export default function TypingIndicator() {
   return (
     <div className="flex items-center p-3 bg-slate-700/50 rounded-lg w-fit mb-4">

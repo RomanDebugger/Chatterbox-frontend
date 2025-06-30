@@ -5,141 +5,94 @@ import { socketEvents } from '@/app/lib/socket';
 
 export function useRoom(roomId) {
   const [room, setRoom] = useState(null);
-  const [messages, setMessages] = useState([]); 
+  const [messages, setMessages] = useState([]);
   const [typingUsers, setTypingUsers] = useState([]);
   const prevRoomId = useRef(null);
   const typingTimeout = useRef(null);
   const { socket, emit, on, off } = useSocket();
 
-  // Load room data
-  useEffect(() => {
-    if (!roomId) return;
-
-    const load = async () => {
-      try {
-    const [roomData, messagesData] = await Promise.all([
-      api.getRooms(roomId),
-      api.getMessages(roomId),
-    ]);
-
-    console.log('[DEBUG] messagesData:', messagesData);
-
-    setRoom(roomData);
-
-    const msgs = Array.isArray(messagesData)
-      ? messagesData
-      : Array.isArray(messagesData.messages)
-      ? messagesData.messages
-      : [];
-
-    setMessages(msgs);
-    console.log('[DEBUG] normalized messages:', msgs);
-
-  } catch (err) {
-    console.error('Failed to load room:', err);
-  }
-    };
-
-    load();
+  const loadRoomData = useCallback(async () => {
+    try {
+      const [roomData, messagesData] = await Promise.all([
+        api.getRooms(roomId),
+        api.getMessages(roomId),
+      ]);
+      
+      setRoom(roomData);
+      setMessages(Array.isArray(messagesData?.messages) ? messagesData.messages : []);
+    } catch (err) {
+      console.error('Failed to load room:', err);
+    }
   }, [roomId]);
 
+  const handleStatusUpdate = useCallback(({ messageId, userId, type }) => {
+    setMessages(prev => prev.map(msg => 
+      msg._id === messageId ? {
+        ...msg,
+        deliveredTo: type === 'delivered' 
+          ? [...new Set([...(msg.deliveredTo || []), userId])]
+          : msg.deliveredTo,
+        seenBy: type === 'seen'
+          ? [...new Set([...(msg.seenBy || []), userId])]
+          : msg.seenBy
+      } : msg
+    ));
+  }, []);
+
+  // Socket event handlers
+  const handleNewMessage = useCallback((message) => {
+    setMessages(prev => [...prev.slice(-99), message]);
+  }, []);
+
+  const handleTypingEvent = useCallback(({ userId, username }) => {
+    setTypingUsers(prev => 
+      prev.some(u => u.userId === userId) 
+        ? prev 
+        : [...prev, { userId, username }]
+    );
+  }, []);
+
+  const handleStopTyping = useCallback(({ userId }) => {
+    setTypingUsers(prev => prev.filter(u => u.userId !== userId));
+  }, []);
+
   useEffect(() => {
-  console.log('[DEBUG] messages changed:', messages);
-}, [messages]);
+    if (roomId) loadRoomData();
+  }, [roomId, loadRoomData]);
 
-
-  // Handle socket events + room switching
   useEffect(() => {
     if (!socket || !roomId) return;
 
+    // Room switching logic
     if (prevRoomId.current !== roomId) {
-  if (prevRoomId.current) {
-    emit(socketEvents.LEAVE_ROOM, prevRoomId.current);
-  }
-  emit(socketEvents.JOIN_ROOM, roomId);
-  prevRoomId.current = roomId;
-}
-
-
-    prevRoomId.current = roomId;
-
-    const handleNewMessage = (message) => {
-      setMessages(prev => [...prev.slice(-99), message]); 
-
-    };
-
-const handleTyping = ({ userId, username }) => {
-  console.log('[TYPING] Received typing event:', { userId, username });
-
-  if (!userId || !username) {
-    console.warn('[TYPING] Invalid typing payload:', { userId, username });
-    return;
-  }
-
-  setTypingUsers(prev => {
-    const exists = prev.some(u => u.userId === userId);
-    if (exists) {
-      console.log(`[TYPING] User ${username} (${userId}) is already in typing list`);
-      return prev;
+      if (prevRoomId.current) {
+        emit(socketEvents.LEAVE_ROOM, prevRoomId.current);
+      }
+      emit(socketEvents.JOIN_ROOM, roomId);
+      prevRoomId.current = roomId;
     }
-    const updated = [...prev, { userId, username }];
-    console.log('[TYPING] Updated typing users:', updated);
-    return updated;
-  });
-};
 
-const handleStopTyping = ({ userId }) => {
-  console.log('[STOP-TYPING] Received stop typing event:', { userId });
-
-  setTypingUsers(prev => {
-    const updated = prev.filter(u => u.userId !== userId);
-    console.log('[STOP-TYPING] Updated typing users:', updated);
-    return updated;
-  });
-};
-
-
-
-
-    const handleStatusUpdate = ({ messageId, userId, type }) => {
-      setMessages(prev => prev.map(msg =>
-        msg._id === messageId
-          ? {
-              ...msg,
-              deliveredTo: type === 'delivered' 
-                ? [...new Set([...(msg.deliveredTo || []), userId])]
-                : msg.deliveredTo,
-              seenBy: type === 'seen'
-                ? [...new Set([...(msg.seenBy || []), userId])]
-                : msg.seenBy,
-            }
-          : msg
-      ));
-      console.log('[DEBUG] handleNewMessage prev:', prev);
+    // Event listeners
+    const handlers = {
+      [socketEvents.RECEIVE_MESSAGE]: handleNewMessage,
+      [socketEvents.TYPING]: handleTypingEvent,
+      [socketEvents.STOP_TYPING]: handleStopTyping,
+      [socketEvents.MESSAGE_DELIVERED]: (data) => handleStatusUpdate({ ...data, type: 'delivered' }),
+      [socketEvents.MESSAGE_SEEN]: (data) => handleStatusUpdate({ ...data, type: 'seen' })
     };
 
-const handleDelivered = (data) => handleStatusUpdate({ ...data, type: 'delivered' });
-const handleSeen = (data) => handleStatusUpdate({ ...data, type: 'seen' });
-
-
-    on(socketEvents.RECEIVE_MESSAGE, handleNewMessage);
-    on(socketEvents.TYPING, handleTyping);
-    on(socketEvents.STOP_TYPING, handleStopTyping);
-    on(socketEvents.MESSAGE_DELIVERED, handleDelivered);
-    on(socketEvents.MESSAGE_SEEN, handleSeen);
-
+    Object.entries(handlers).forEach(([event, handler]) => {
+      on(event, handler);
+    });
 
     return () => {
-      off(socketEvents.RECEIVE_MESSAGE, handleNewMessage);
-      off(socketEvents.TYPING, handleTyping);
-      off(socketEvents.STOP_TYPING, handleStopTyping);
-      off(socketEvents.MESSAGE_DELIVERED, handleDelivered);
-      off(socketEvents.MESSAGE_SEEN, handleSeen);
-      emit(socketEvents.LEAVE_ROOM, roomId);
+      Object.entries(handlers).forEach(([event, handler]) => {
+        off(event, handler);
+      });
+      if (roomId) emit(socketEvents.LEAVE_ROOM, roomId);
     };
-  }, [socket, roomId, emit, on, off]);
+  }, [socket, roomId, emit, on, off, handleNewMessage, handleTypingEvent, handleStopTyping, handleStatusUpdate]);
 
-  // Helper methods
   const sendMessage = useCallback((content) => {
     if (socket && roomId) {
       emit(socketEvents.SEND_MESSAGE, { roomId, content });
@@ -149,22 +102,10 @@ const handleSeen = (data) => handleStatusUpdate({ ...data, type: 'seen' });
   const sendTyping = useCallback(() => {
     if (!socket || !roomId) return;
     emit(socketEvents.TYPING, roomId);
-    if (typingTimeout.current) clearTimeout(typingTimeout.current);
+    clearTimeout(typingTimeout.current);
     typingTimeout.current = setTimeout(() => {
       emit(socketEvents.STOP_TYPING, roomId);
     }, 2000);
-  }, [socket, roomId, emit]);
-
-  const markDelivered = useCallback((messageId) => {
-    if (socket && roomId) {
-      emit(socketEvents.MESSAGE_DELIVERED, { roomId, messageId });
-    }
-  }, [socket, roomId, emit]);
-
-  const markSeen = useCallback((messageId) => {
-    if (socket && roomId) {
-      emit(socketEvents.MESSAGE_SEEN, { roomId, messageId });
-    }
   }, [socket, roomId, emit]);
 
   return {
@@ -173,7 +114,11 @@ const handleSeen = (data) => handleStatusUpdate({ ...data, type: 'seen' });
     typingUsers,
     sendMessage,
     sendTyping,
-    markDelivered,
-    markSeen,
+    markDelivered: useCallback((messageId) => {
+      if (socket && roomId) emit(socketEvents.MESSAGE_DELIVERED, { roomId, messageId });
+    }, [socket, roomId, emit]),
+    markSeen: useCallback((messageId) => {
+      if (socket && roomId) emit(socketEvents.MESSAGE_SEEN, { roomId, messageId });
+    }, [socket, roomId, emit])
   };
 }

@@ -1,48 +1,49 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState,} from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/app/contexts/AuthContext';
 import FloatingBackground from '../components/FloatingBackground';
-import AuthHeader from '../components/auth/AuthHeader';
+import Logo from '../components/Logo';
 import AuthToggle from '../components/auth/AuthToggle';
 import AuthForm from '../components/auth/AuthForm';
-import AuthFooter from '../components/auth/AuthFooter';
-import LoadingSpinner from '../components/auth/LoadingSpinner';
 
 export default function AuthPage() {
   const [activeForm, setActiveForm] = useState('login');
-  const [loginData, setLoginData] = useState({ username: '', password: '' });
-  const [signupData, setSignupData] = useState({ username: '', password: '', confirmPassword: '' });
+  const [form, setForm] = useState({
+  username: '',
+  password: '',
+  confirmPassword: '' 
+  });
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [mounted, setMounted] = useState(false);
   const { login, signup } = useAuth();
   const router = useRouter();
 
-  const PRIMARY_GRADIENT = 'from-amber-400 to-rose-400';
-  const SECONDARY_GRADIENT = 'from-sky-400 to-indigo-400';
-
-  useEffect(() => {
-    setLoginData({ username: '', password: '' });
-    setSignupData({ username: '', password: '', confirmPassword: '' });
-  }, [activeForm]);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  const handleSubmit = async (e) => {
+  const GRADIENTS = {
+  primary: 'from-amber-400 to-rose-400', 
+  secondary: 'from-sky-400 to-indigo-400'
+  };
+  
+  const handleFormChange = (formType) => {
+  setForm({
+    username: '',
+    password: '',
+    confirmPassword: formType === 'signup' ? '' : undefined
+  });
+  setError('');
+};
+    const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
     try {
-      if (activeForm === 'signup' && signupData.password !== signupData.confirmPassword) {
-        alert('Passwords do not match');
+      if (activeForm === 'signup' && form.password !== form.confirmPassword) {
+        setError('Passwords must match');
         return;
       }
       const result = activeForm === 'login'
-        ? await login(loginData)
-        : await signup(signupData);
+        ? await login(form)
+        : await signup(form);
 
       if (result.success) {
         router.push('/chat');
@@ -56,18 +57,6 @@ export default function AuthPage() {
       setIsLoading(false);
     }
   };
-
-  // if (!mounted) {
-  //   return (
-  //     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-red-900 to-slate-700">
-  //       <div className="w-24 h-24 animate-pulse rounded-full bg-gradient-to-r from-amber-400/20 to-rose-400/20"></div>
-  //     </div>
-  //   );
-  // }
-
-  if (isLoading || !mounted) {
-    return <LoadingSpinner />;
-  }
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-red-900 to-slate-700 overflow-hidden relative">
       <FloatingBackground className="absolute inset-0 z-0" />
@@ -77,25 +66,33 @@ export default function AuthPage() {
             {error}
           </div>
         )}
-        <AuthHeader primaryGradient={PRIMARY_GRADIENT} />
+        <div className="text-center mb-8">
+      <Logo className="w-16 h-16 mx-auto mb-4" />
+      <h1 className={`text-4xl font-bold mb-2 bg-gradient-to-r ${GRADIENTS.primary} bg-clip-text text-transparent`}>
+        Chatterbox
+      </h1>
+      <p className="text-slate-300 font-mono">"Chat or are we cooked? 💀"</p>
+      <p className="text-slate-400 text-sm mt-1 font-mono">no emails, just vibes</p>
+    </div>
         <AuthToggle
           activeForm={activeForm}
           setActiveForm={setActiveForm}
-          primaryGradient={PRIMARY_GRADIENT}
-          secondaryGradient={SECONDARY_GRADIENT}
+          onFormChange={handleFormChange}
         />
         <AuthForm
           activeForm={activeForm}
-          loginData={loginData}
-          signupData={signupData}
-          setLoginData={setLoginData}
-          setSignupData={setSignupData}
+          form={form}
+          setForm={setForm}
           handleSubmit={handleSubmit}
           isLoading={isLoading}
-          primaryGradient={PRIMARY_GRADIENT}
-          secondaryGradient={SECONDARY_GRADIENT}
         />
-        <AuthFooter activeForm={activeForm} />
+        <div className="mt-6 text-center">
+      <p className="text-slate-500 text-xs font-mono">
+        {activeForm === 'login' 
+          ? '"forgot password? skill issue much?"'
+          : '"we don\'t track you (much)"'}
+      </p>
+    </div>
       </div>
     </div>
   );
