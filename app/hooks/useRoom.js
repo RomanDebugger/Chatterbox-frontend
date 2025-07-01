@@ -25,9 +25,9 @@ export function useRoom(roomId) {
     }
   }, [roomId]);
 
-  const handleStatusUpdate = useCallback(({ messageId, userId, type }) => {
+  const handleStatusUpdate = useCallback(({ messageIds, userId, type }) => {
     setMessages(prev => prev.map(msg => 
-      msg._id === messageId ? {
+      messageIds.includes(msg._id) ? {
         ...msg,
         deliveredTo: type === 'delivered' 
           ? [...new Set([...(msg.deliveredTo || []), userId])]
@@ -39,7 +39,6 @@ export function useRoom(roomId) {
     ));
   }, []);
 
-  // Socket event handlers
   const handleNewMessage = useCallback((message) => {
     setMessages(prev => [...prev.slice(-99), message]);
   }, []);
@@ -58,12 +57,11 @@ export function useRoom(roomId) {
 
   useEffect(() => {
     if (roomId) loadRoomData();
-  }, [roomId, loadRoomData]);
+  }, [roomId, loadRoomData]);  
 
   useEffect(() => {
     if (!socket || !roomId) return;
 
-    // Room switching logic
     if (prevRoomId.current !== roomId) {
       if (prevRoomId.current) {
         emit(socketEvents.LEAVE_ROOM, prevRoomId.current);
@@ -72,7 +70,6 @@ export function useRoom(roomId) {
       prevRoomId.current = roomId;
     }
 
-    // Event listeners
     const handlers = {
       [socketEvents.RECEIVE_MESSAGE]: handleNewMessage,
       [socketEvents.TYPING]: handleTypingEvent,
@@ -114,11 +111,13 @@ export function useRoom(roomId) {
     typingUsers,
     sendMessage,
     sendTyping,
-    markDelivered: useCallback((messageId) => {
-      if (socket && roomId) emit(socketEvents.MESSAGE_DELIVERED, { roomId, messageId });
+    markDelivered: useCallback((messageIds) => {
+    if (socket && roomId) emit(socketEvents.MESSAGE_DELIVERED, { roomId, messageIds });
     }, [socket, roomId, emit]),
-    markSeen: useCallback((messageId) => {
-      if (socket && roomId) emit(socketEvents.MESSAGE_SEEN, { roomId, messageId });
+
+    markSeen: useCallback((messageIds) => {
+      if (socket && roomId) emit(socketEvents.MESSAGE_SEEN, { roomId, messageIds });
     }, [socket, roomId, emit])
+
   };
 }

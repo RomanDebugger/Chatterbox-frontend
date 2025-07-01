@@ -53,5 +53,22 @@ export function useRooms(user) {
     return () => off(socketEvents.RECEIVE_MESSAGE, handleMessage);
   }, [socket, on, off, sortRooms]);
 
+useEffect(() => {
+  if (!socket) return;
+  const handleNewRoom = (newRoom) => {
+  setRooms(prev => {
+    const exists = prev.some(r => 
+      r._id === newRoom._id || 
+      r.participants.every(p => 
+        newRoom.participants.some(np => np._id === p._id)
+      ));
+    return exists ? prev : sortRooms([...prev, newRoom]);
+  });
+};
+
+  on(socketEvents.ROOM_CREATED, handleNewRoom);
+  return () => off(socketEvents.ROOM_CREATED, handleNewRoom);
+}, [socket, on, off, sortRooms])
+
   return { rooms, loadRooms, createNewRoomWithUser };
 }
