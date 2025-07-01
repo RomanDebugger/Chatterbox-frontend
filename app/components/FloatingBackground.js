@@ -1,9 +1,10 @@
 'use client';
 import { useState, useEffect } from 'react';
 
+const emojis = ['✉️', '💬', '🗨️', '🔒', '👻', '🎙️', '⚡', '🌟', '💫', '🔮', '🎯', '🚀'];
+
 export default function FloatingBackground() {
   const [particles, setParticles] = useState([]);
-  const emojis = ['✉️', '💬', '🗨️', '🔒', '👻', '🎙️', '⚡', '🌟', '💫', '🔮', '🎯', '🚀'];
   
   useEffect(() => {
     const createParticles = () => {

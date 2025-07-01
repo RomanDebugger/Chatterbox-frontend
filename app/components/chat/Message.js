@@ -1,7 +1,7 @@
 'use client';
 import React from 'react';
 
-const Message = React.memo(({ msg, isMine, isSystem }) => {
+const Message = React.memo(function Message({ msg, isMine, isSystem }) {
   const timeString = new Date(msg.createdAt).toLocaleTimeString([], {
     hour: '2-digit',
     minute: '2-digit'

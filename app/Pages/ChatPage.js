@@ -8,7 +8,7 @@ import { debounce } from 'lodash-es';
 import RoomList from '../components/chat/RoomList';
 import MessageList from '../components/chat/MessageList';
 import MessageInput from '../components/chat/MessageInput';
-
+import { MenuIcon } from '../components/chat/Icons';
 export default function ChatPage() {
   // Auth and state
   const { user, loading } = useAuth();
