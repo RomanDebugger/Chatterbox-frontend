@@ -29,7 +29,6 @@ export default function NewRoomModal({ open, onClose }) {
         if (response.error) {
           setError(response.error);
         } else {
-          console.log('Room created:', response.room);
           onClose();
         }
         setLoading(false);

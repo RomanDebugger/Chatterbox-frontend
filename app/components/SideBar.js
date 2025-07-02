@@ -13,7 +13,7 @@ export default function Sidebar({ isMobileView }) {
     <div
       className={`flex items-center ${
         isMobileView
-          ? 'flex-row gap-2 pr-2' // spacing between icons
+          ? 'flex-row gap-2 pr-2' 
           : 'bg-slate-800/80 backdrop-blur-xs border-r border-slate-700/50 flex-col py-6'
       }`}
     >
