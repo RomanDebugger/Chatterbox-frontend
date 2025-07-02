@@ -43,7 +43,7 @@ export default function NewRoomModal({ open, onClose }) {
   };
 
   return (
-    <div className="fixed top-0 left-0 w-100 h-full bg-slate-900 border-l border-slate-700 p-4 z-50">
+    <div className="fixed top-0 left-0 w-full md:w-100 h-full bg-slate-900 border-l border-slate-700 p-4 z-50">
       <h2 className="text-lg font-semibold text-white mb-4">New Room</h2>
 
       <div className="mb-2">

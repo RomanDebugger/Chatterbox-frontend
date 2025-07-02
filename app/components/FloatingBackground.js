@@ -64,7 +64,7 @@ export default function FloatingBackground() {
         </div>
       ))}
       
-      {/* Floating orbs for extra ambiance */}
+      {/* Floating orbs*/}
       {Array.from({ length: 8 }, (_, i) => (
         <div
           key={`orb-${i}`}

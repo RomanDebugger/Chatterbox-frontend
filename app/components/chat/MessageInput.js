@@ -8,8 +8,8 @@ export default function MessageInput({ value, onChange, onSend, onTyping }) {
   }, [onTyping, onSend]);
 
   return (
-    <div className="p-4 border-t border-slate-700/50 bg-slate-800/80">
-      <div className="flex items-center bg-slate-700/50 rounded-lg p-2">
+    <div className="p-3 sm:p-4 border-t border-slate-700/50 bg-slate-800/80 sticky">
+      <div className="flex items-center bg-slate-700/50 rounded-lg px-2 sm:px-3 py-2">
         <input
           value={value}
           onChange={(e) => onChange(e.target.value)}

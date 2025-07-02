@@ -2,16 +2,12 @@
 import { useEffect, useRef } from 'react';
 import Message from './Message';
 import TypingIndicator from './TypingIndicator';
-import { MenuIcon } from './Icons';
 import { debounce } from 'lodash-es';
 
 export default function MessageList({ 
   messages, 
   user, 
   typingUsers, 
-  room, 
-  isMobileView, 
-  onOpenSidebar,
   markSeen
 }) {
   const messagesEndRef = useRef(null);
@@ -19,12 +15,10 @@ export default function MessageList({
   const seenBuffer = useRef(new Set());
   const debouncedFlushSeen = useRef();
 
-  // Scroll to bottom on new message
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Debounced flush function
   useEffect(() => {
     debouncedFlushSeen.current = debounce(() => {
       const ids = Array.from(seenBuffer.current);
@@ -32,12 +26,11 @@ export default function MessageList({
         markSeen(ids);
         seenBuffer.current.clear();
       }
-    }, 400); // Adjust debounce timing if needed
+    }, 400); 
 
     return () => debouncedFlushSeen.current.cancel?.();
   }, [markSeen]);
 
-  // Observer for visibility-based "seen" detection
   useEffect(() => {
     if (!listRef.current || !user) return;
 
@@ -62,20 +55,6 @@ export default function MessageList({
 
   return (
     <div className="flex-1 flex flex-col">
-      {isMobileView && (
-        <header className="p-3 border-b border-slate-700/50 flex items-center bg-slate-800/80">
-          <button 
-            onClick={onOpenSidebar}
-            className="p-2 mr-2 text-white hover:bg-slate-700/50 rounded-full"
-            aria-label="Open menu"
-          >
-            <MenuIcon />
-          </button>
-          <h2 className="font-bold text-white truncate">
-            {room?.name || 'Select conversation'}
-          </h2>
-        </header>
-      )}
       
       <div className="flex-1 overflow-y-auto p-4 space-y-4" ref={listRef}>
         {messages.map(msg => (
