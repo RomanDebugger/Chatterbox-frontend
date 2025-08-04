@@ -146,5 +146,5 @@ npm run dev
 
 ## Credits
 
-Built by [Akshat Tiwari](https://github.com/atiwari-0)
-Part of the Chatterbox Fullstack project (see [Chatterbox-Backend](https://github.com/atiwari-0/Chatterbox-Backend))
+Built by [Akshat Tiwari](https://github.com/RomanDebugger)
+Part of the Chatterbox Fullstack project (see [Chatterbox-Backend](https://github.com/RomanDebugger/Chatterbox-Backend))
